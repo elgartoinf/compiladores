@@ -1,27 +1,28 @@
+/*
 #float
-float s = 0.0
-0.9
+float s = 0.0;
+0.9;
 
 #int
 
-int ee = 0
-0
+int ee = 0;
+0;
 
 
 #void
-void s()
-void
+void s();
+void;
 
 
 #string
-string s1 = "hola"
-string ss = 'hola'
-'hola'
-"hola"
+string s1 = "hola";
+string ss = 'hola';
+'hola';
+"hola";
 
 #char
-'s'
-'ss'
+'s';
+'ss';
 
 #if
 if(){
@@ -42,18 +43,18 @@ if(){
 }
 
 #true
-true
+true;
 
 #false
-false
+false;
 
 #not_eq
-s != s
-s != ss
+s != s;
+s != ss;
 
 #while
 
-while
+while;
 while(){
 	
 }
@@ -71,16 +72,52 @@ id
 #return
 
 #comments
+*/
 /* 
-
+;;
+;
+;
+;
+;
 */
 /*******
 */
 /**********/
 /* */
-
-
+/*
+#;
 (
 )
 
-(())
+(());
+
+
++
+-
+*
+/
+*/
+
+
+
++
+-
+*
+/
+|
+&
+!
+=>
+>
+=>
+<
+=
+(
+)
+{
+}
+;
+,
+:
+[
+]

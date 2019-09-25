@@ -131,7 +131,9 @@ class Lexer(SLYLexer):
         'eqeq',
         'not_eqeq',
         'eq_greater',
+        'greater',
         'eq_less',
+        'less',
         'eq_add',
         'eq_sub',
         
@@ -142,7 +144,7 @@ class Lexer(SLYLexer):
         'divide',
         'assign',
 
-
+        
         'lparen',
         'rparen',
         
@@ -172,9 +174,6 @@ class Lexer(SLYLexer):
         "|",
         "&",
         "!",
-        ">",
-        "<",
-        "=",
         "(",
         ")",
         "{",
@@ -212,8 +211,10 @@ class Lexer(SLYLexer):
     RPAREN  = r'\)' 
     EQEQ = r"=="
     NOT_EQEQ = r"!="
+    GREATER = r">"
     EQ_GREATER = r"=>"
     EQ_LESS = r"=<"
+    LESS = r"<"
     EQ_ADD = r"\+="
     EQ_SUB = r"-="
     ID["true"] = TRUE
