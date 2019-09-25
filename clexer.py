@@ -98,7 +98,7 @@ from colors import bcolors
 # lexer. Las pruebas unitarias y otras caracteristicas del compilador
 # confiarán en esta función. Ver el archivo errors.py para más documentación
 # acerca del mecanismo de manejo de errores.
-from errors import error
+from errors import error, errors_reported
 
 # ----------------------------------------------------------------------
 # El paquete SLY. https://github.com/dabeaz/sly
@@ -144,7 +144,7 @@ class Lexer(SLYLexer):
         'divide',
         'assign',
 
-        
+
         'lparen',
         'rparen',
         
@@ -320,6 +320,8 @@ def main():
     text = open(sys.argv[1]).read()
     for tok in lexer.tokenize(text):
         print("{} {} {}".format(bcolors.OKGREEN,tok,bcolors.ENDC))
+
+    print("total errors: {}".format(errors_reported()))
 
 if __name__ == '__main__':
     main()
