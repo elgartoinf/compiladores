@@ -110,17 +110,30 @@ class Lexer(SLYLexer):
     # nombres especiales utilizados en el lenguaje, como 'if', 'else',
     # 'while', etc.
     keywords = {
+        #type_spec
         'float',
         'int',
         'void',
         'string',
         'char',
-        'if',
-        'else',
         'true',
         'false',
-        'not_eq',
+
+        #conditions
+        'if',
+        'else',
+        
+        #cycles
         'while',
+
+        #comparations
+        'eqeq',
+        'not_eqeq',
+        'eq_greater',
+        'eq_less',
+        'eq_add',
+        'eq_sub',
+        
         'id',
         'plus',
         'minus',
@@ -145,8 +158,6 @@ class Lexer(SLYLexer):
         IDENT,
     }
     literals = ''
-    
-    print(tokens)
     # ----------------------------------------------------------------------
     # Caracteres ignorados (whitespace)
     #
@@ -154,7 +165,8 @@ class Lexer(SLYLexer):
     # No lo cambie.
 
     ignore = ' \t\r'
-
+    ignore_comment = r'\#.*'
+    ignore_comment_slash = r"/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/"
     ignore_newline = r'\n+'
     # ----------------------------------------------------------------------
     # Patrones ignorados.  Complete las expresiones regulares a continuación 
@@ -171,6 +183,12 @@ class Lexer(SLYLexer):
     ASSIGN  = r'='
     LPAREN  = r'\('
     RPAREN  = r'\)' 
+    EQEQ = r"=="
+    NOT_EQEQ = r"!="
+    EQ_GREATER = r"=>"
+    EQ_LESS = r"=<"
+    EQ_ADD = r"\+="
+    EQ_SUB = r"-="
     ID["true"] = TRUE
     ID["false"] = FALSE
     ID["while"] = WHILE
