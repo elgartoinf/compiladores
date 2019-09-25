@@ -118,6 +118,7 @@ class Lexer(SLYLexer):
         'char',
         'true',
         'false',
+        'null',
 
         #conditions
         'if',
@@ -134,16 +135,21 @@ class Lexer(SLYLexer):
         'eq_add',
         'eq_sub',
         
-        'id',
+        #basic operations
         'plus',
         'minus',
         'times',
         'divide',
         'assign',
+
+
         'lparen',
         'rparen',
-        'null',
+        
         'return',
+
+        'id',
+
     }
 
     # ----------------------------------------------------------------------
@@ -157,7 +163,28 @@ class Lexer(SLYLexer):
         # Identificador
         IDENT,
     }
-    literals = ''
+
+    literals = {
+        "+",
+        "-",
+        "*",
+        "/",
+        "|",
+        "&",
+        "!",
+        ">",
+        "<",
+        "=",
+        "(",
+        ")",
+        "{",
+        "}",
+        ";",
+        ",",
+        ":",
+        "[",
+        "]",
+    }
     # ----------------------------------------------------------------------
     # Caracteres ignorados (whitespace)
     #
