@@ -91,6 +91,7 @@ intente ejecutar alguna de las pruebas mas difíciles:
 Bono: ¿Cómo haría usted para convertir estas pruebas en pruebas 
 unitarias adecuadas?
 '''
+import re
 from colors import bcolors
 # ----------------------------------------------------------------------
 # El siguiente import carga una función error(lineno,msg) que se debe
@@ -103,6 +104,8 @@ from errors import error, errors_reported
 # ----------------------------------------------------------------------
 # El paquete SLY. https://github.com/dabeaz/sly
 from sly import Lexer as SLYLexer
+
+from SLYToken import Token
 
 class Lexer(SLYLexer):
     # -------
@@ -143,8 +146,8 @@ class Lexer(SLYLexer):
         'times',
         'divide',
         'assign',
-
-
+        'semi',
+        'comma',
         'lparen',
         'rparen',
         
@@ -191,15 +194,14 @@ class Lexer(SLYLexer):
     # No lo cambie.
 
     ignore = ' \t\r'
-    ignore_comment = r'\#.*'
-    ignore_comment_slash = r"/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/"
+    ignore_comment = r'(\/\/.*|/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/)|/\*'
     ignore_newline = r'\n+'
     # ----------------------------------------------------------------------
     # Patrones ignorados.  Complete las expresiones regulares a continuación 
     # para ignorar los comentarios
     #
     FLOAT = r"\d*\.\d+"
-    INT = r"\d+"
+    INT = r"0[xX][0-9a-fA-F]+|\d+"
     STRING = r"(\".*?(?<!\\)(\\\\)*\"|'.*?(?<!\\)(\\\\)*')"
     ID = r"(--[a-zA-Z_]([a-zA-Z0-9_]|!)*--|[a-zA-Z_]([a-zA-Z0-9_]|!)*)"
     PLUS    = r'\+'
@@ -207,6 +209,8 @@ class Lexer(SLYLexer):
     TIMES   = r'\*'
     DIVIDE  = r'/'
     ASSIGN  = r'='
+    SEMI = r';'
+    COMMA = r','
     LPAREN  = r'\('
     RPAREN  = r'\)' 
     EQEQ = r"=="
@@ -291,11 +295,26 @@ class Lexer(SLYLexer):
     # ----------------------------------------------------------------------
     # Manejo de errores de caracteres incorrectos
     def error(self, t):
-        error(self.lineno, 'Caracter Ilegal %r \n' % t.value[0])
+        if re.match(r'(\/\/.*|/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/)|/\*',t.value):
+            error(self.lineno, "Comentario sin terminar {}".format(t.value))
+        elif re.match(r'(\"|\')', t.value):
+            error(self.lineno, "Cadena sin terminar {}"(t.value.rstrip()))
+        elif t.value.__contains__("\\"):
+            error(self.lineno, "Cadena de código de escape malo {}".format(t.value.rstrip()))
+        else:
+            error(self.lineno, "Caracter Ilegal {}".format(t.value[0]))
         self.index += 1
 
     def ignore_newline(self, t):
         self.lineno += t.value.count('\n')
+
+
+    def ignore_comment(self,t):
+        if not re.match(r'(\/\/.*|/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/)',t.value):
+            errorToken = Token()
+            errorToken.type = 'ERROR'
+            errorToken.value = t.value
+            raise self.error(errorToken)
 
 # ----------------------------------------------------------------------
 #                   NO CAMBIE NADA POR DEBAJO DE ESTA PARTE
@@ -318,9 +337,11 @@ def main():
 
     lexer = Lexer()
     text = open(sys.argv[1]).read()
-    for tok in lexer.tokenize(text):
-        print("{} {} {}".format(bcolors.OKGREEN,tok,bcolors.ENDC))
-
+    try:
+        for tok in lexer.tokenize(text):
+            print("{} {} {}".format(bcolors.OKGREEN,tok,bcolors.ENDC))
+    except:
+        pass
     print("total errors: {}".format(errors_reported()))
 
 if __name__ == '__main__':
