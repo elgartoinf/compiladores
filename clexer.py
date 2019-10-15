@@ -92,20 +92,18 @@ Bono: ¿Cómo haría usted para convertir estas pruebas en pruebas
 unitarias adecuadas?
 '''
 import re
-from colors import bcolors
+from utils.colors import bcolors
 # ----------------------------------------------------------------------
 # El siguiente import carga una función error(lineno,msg) que se debe
 # utilizar para informar de todos los mensajes de error emitidos por su
 # lexer. Las pruebas unitarias y otras caracteristicas del compilador
 # confiarán en esta función. Ver el archivo errors.py para más documentación
 # acerca del mecanismo de manejo de errores.
-from errors import error, errors_reported
+from utils.errors import error, errors_reported
 
 # ----------------------------------------------------------------------
 # El paquete SLY. https://github.com/dabeaz/sly
 from sly import Lexer as SLYLexer
-
-from SLYToken import Token
 
 class Lexer(SLYLexer):
     # -------
@@ -113,50 +111,13 @@ class Lexer(SLYLexer):
     # nombres especiales utilizados en el lenguaje, como 'if', 'else',
     # 'while', etc.
     keywords = {
-        #type_spec
-        'float',
-        'integer',
-        'string',
-        'char',
-        'true',
-        'false',
-        'null',
-
-        #conditions
-        'if',
-        'else',
-        
-        #cycles
-        'while',
-
-        #comparations
-        'eqeq',
-        'not_eqeq',
-        'eq_greater',
-        'greater',
-        'eq_less',
-        'less',
-        'eq_add',
-        'eq_sub',
-        
-        #basic operations
-        'plus',
-        'minus',
-        'times',
-        'divide',
-        'assign',
-        'semi',
-        'comma',
-        'lparen',
-        'rparen',
-        'lbracket',
-        'rbracket',
+        #condiciones
+        'if', 'else', 
+        #ciclos
+        'while', 
+        #return
         'return',
-        'muleq',
-        'diveq',
-        'modeq',
-        'or',
-        'and',
+        'int','float','string',
     }
 
     # ----------------------------------------------------------------------
@@ -167,28 +128,27 @@ class Lexer(SLYLexer):
         # keywords
         * { kw.upper() for kw in keywords },
 
-        # Identificador
-        IDENT,
+        # Identificadores
+        IDENT, FUNCTION,
+
+        # Literales
+        INTEGER, FLOAT, STRING,
+
+        # Operadores
+        PLUS, MINUS, TIMES, DIVIDE, 
+        INC, DEC, ADDEQ, SUBEQ,
+        MULEQ,DIVEQ, MODEQ,MODULE,
+
+        #operadores booleanos
+        OR,AND,LE,EQ,
+        GE, NE,LT,GT,
+        NOT,
+
+        # delimitadores
+        ASSIGN, LPAREN, RPAREN, SEMI, COMMA,
+        LBRACKET, RBRACKET, 
     }
 
-    literals = {
-        "+",
-        "-",
-        "*",
-        "/",
-        "|",
-        "&",
-        "!",
-        "(",
-        ")",
-        "{",
-        "}",
-        ";",
-        ",",
-        ":",
-        "[",
-        "]",
-    }
     # ----------------------------------------------------------------------
     # Caracteres ignorados (whitespace)
     #
@@ -196,57 +156,42 @@ class Lexer(SLYLexer):
     # No lo cambie.
 
     ignore = ' \t\r'
-    ignore_comment = r'(\/\/.*|/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/)|/\*'
-    ignore_newline = r'\n+'
+    ignore_comment = r'\/\/.*'
     # ----------------------------------------------------------------------
     # Patrones ignorados.  Complete las expresiones regulares a continuación 
     # para ignorar los comentarios
-    PLUS    = r'\+'
-    MINUS   = r'-'
-    TIMES   = r'\*'
-    DIVIDE  = r'/'
-    ASSIGN  = r'='
-    SEMI = r';'
-    COMMA = r','
-    LPAREN  = r'\('
-    RPAREN  = r'\)' 
-    EQEQ = r"=="
-    NOT_EQEQ = r"!="
-    GREATER = r">"
-    EQ_GREATER = r"=>"
-    EQ_LESS = r"=<"
-    LESS = r"<"
-    EQ_ADD = r"\+="
-    EQ_SUB = r"-="
+    
+    PLUS     = r'\+'
+    MINUS    = r'-'
+    TIMES    = r'\*'
+    DIVIDE   = r'\/'
+    INC      = r'\+\+'
+    DEC      = r'--'
+    ADDEQ    = r'\+='
+    SUBEQ    = r'-='
     MULEQ    = r'\*='
     DIVEQ    = r'\/='
     MODEQ    = r'\%='
+    MODULE   = r'\%'
+
     OR       = r'\|\|'
     AND      = r'\&\&'
+    LE       = r'<='
+    EQ       = r'=='
+    GE       = r'>='
+    NE       = r'!='
+    LT       = r'<'
+    GT       = r'>'
+    NOT      = r'!'
+    
+
+    ASSIGN   = r'='
+    LPAREN   = r'\('
+    RPAREN   = r'\)'
+    SEMI     = r';'
+    COMMA    = r','
     LBRACKET = r'\{'
     RBRACKET = r'\}'
-    ID["true"] = TRUE
-    ID["false"] = FALSE
-    ID["while"] = WHILE
-    ID["if"] = IF
-    ID["else"] = ELSE
-    ID["null"] = NULL
-    ID["return"] = RETURN
-
-
-    #/*  */
-    @_(r'/\*(.|\n)*\*/')
-    def COMMENT(self, t):
-        self.lineno += t.value.count('\n')
-
-    # //
-    @_(r'//.*?')
-    def CPPCOMMENT(self, t):
-        self.lineno += 1
-
-    @_(r'/\*[^/\*]*')
-    def COMMENT_UNTERM(self, t):
-        error(self.lineno, "Comentario sin terminar")
         
     # ----------------------------------------------------------------------
     #                           *** DEBE COMPLETAR ***
@@ -266,10 +211,17 @@ class Lexer(SLYLexer):
     #
     # Tokens para literales, INTEGER, FLOAT, STRING.
     #
-    @_(r'\".*\"(,var|,\".*\")*|\'.*\'(,var|,\'.*\')*')
+    @_(r'\'.*\'|\".*\"')
     def STRING(self, t):
         t.value = t.value[1:-1]
         return t
+
+    # Cadenas sin terminar
+    @_(r'\"[^\"]*|\'[^\']*')
+    def STRING_UNTERM(self, t):
+        error(self.lineno, "Cadena sin terminar")
+        self.lineno += 1
+
     # Constante de punto flotante. Debe reconocer los números de punto 
     # flotante en los siguientes formatos:
     #
@@ -285,7 +237,7 @@ class Lexer(SLYLexer):
     #   1e1
     #
     # El valor debe ser convertir en un float de Python cuando se lea
-    @_(r'[-+]?[0-9]*\.[0-9]+(?:[eE][-+]?[0-9]+)?|[-+]?[0-9][eE][0-9]+|[+-]?\d*[.]')
+    @_(r'([-+]?[0-9]*\.[0-9]+(?:[eE][-+]?[0-9]+)?|[-+]?[0-9][eE][0-9]+|[+-]?\d*[.])')
     def FLOAT(self, t):
         if(not("e" in t.value)):
             t.value = float(t.value)
@@ -300,8 +252,8 @@ class Lexer(SLYLexer):
     # Bonificación. Reconocer enteros en diferentes bases tales como 
     # 0x1a, 0o13 o 0b111011.
     
-    @_(r'0[xX][0-9a-fA-F]+|0[oO][0-9a-fA-F]+|[0-9a-fA-F]+|\d+')
-    def INTEGER(self, t):
+    @_(r'^[+-]?0?[xX]?[oO]?[0-9a-fA-F]+$|^[0-9a-fA-F]+$|^\d+$')
+    def INT(self, t):
         if(not("b" in t.value or "o" in t.value or "x" in t.value)):
             t.value = int(t.value)
         return t
@@ -322,15 +274,12 @@ class Lexer(SLYLexer):
     # de token para que coincida con la palabra clave adecuada.
     
     @_(r'[a-zA-Z][a-zA-Z]*\d*_*|[_][a-zA-Z]*\d*_*')
-    def ID(self, t):
-        if t.value == 'const':
-            t.type = 'CONST'
+    def IDENT(self, t):
+        if t.value=='while':
+            t.type='WHILE'
 
-        elif t.value == 'print':
-            t.type = 'PRINT'
-
-        elif t.value == 'func':
-            t.type = 'FUNC'
+        elif t.value=='else':
+            t.type='ELSE'
 
         elif t.value=='return':
             t.type='RETURN'
@@ -338,34 +287,34 @@ class Lexer(SLYLexer):
         elif t.value=='while':
             t.type='WHILE'
 
-        elif t.value=='else':
-            t.type='ELSE'
+        elif t.value=='int':
+            t.type='INT'
         
+        elif t.value=='float':
+            t.type='FLOAT'
+
+        elif t.value=='string':
+            t.type='STRING'
+
+        elif t.value=='void':
+            t.type='VOID'        
         return t
 
     # ----------------------------------------------------------------------
     # Manejo de errores de caracteres incorrectos
-    def error(self, t):
-        if re.match(r'(\/\/.*|/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/)|/\*',t.value):
-            error(self.lineno, "Comentario sin terminar {}".format(t.value))
-        elif re.match(r'(\"|\')', t.value):
-            error(self.lineno, "Cadena sin terminar {}"(t.value.rstrip()))
-        elif t.value.__contains__("\\"):
-            error(self.lineno, "Cadena de código de escape malo {}".format(t.value.rstrip()))
-        else:
-            error(self.lineno, "Caracter Ilegal {}".format(t.value[0]))
+    def error(self, value):
+        error(self.lineno,"Caracter ilegal %s" % (value.value[0]))
         self.index += 1
 
+    @_(r'\n+')
     def ignore_newline(self, t):
-        self.lineno += t.value.count('\n')
+        self.lineno += len(t.value)
 
-
-    def ignore_comment(self,t):
-        if not re.match(r'(\/\/.*|/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/)',t.value):
-            errorToken = Token()
-            errorToken.type = 'ERROR'
-            errorToken.value = t.value
-            raise self.error(errorToken)
+    # Cadenas sin terminar
+    @_(r'(/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/)|/\*')
+    def COMMENT_UNTERM(self, t):
+        error(self.lineno, "Cadena sin terminar")
+        self.lineno += 1
 
 # ----------------------------------------------------------------------
 #                   NO CAMBIE NADA POR DEBAJO DE ESTA PARTE
@@ -390,7 +339,7 @@ def main():
     text = open(sys.argv[1]).read()
     try:
         for tok in lexer.tokenize(text):
-            print("{} {} {}".format(bcolors.OKGREEN,tok,bcolors.ENDC))
+            print("{} {} {} {}".format(bcolors.OKGREEN,tok.lineno,tok,bcolors.ENDC))
     except:
         pass
     print("total errors: {}".format(errors_reported()))

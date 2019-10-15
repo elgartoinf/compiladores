@@ -72,31 +72,12 @@ class Statement(AST):
 	
 class Expression(AST):
 	pass
-
-class ArrayAssignmentExpr(Expression):
-	ident: str
-	expr0 = Expression
-	expr1 = Expression
-
-class NewArrayExpr(Expression):
-	type_spec: DataType
-	expr: Expression
 	
 class Literal(Expression):
 	'''
 	Un valor literal como 2, 2.5, o "dos"
 	'''
 	pass
-
-class BooleanLiteral(Literal):
-	value: str
-
-class IntLiteral(Literal):
-	value: int
-
-class FloatLiteral(Literal):
-	value: float
-
 
 class Location(AST):
 	pass

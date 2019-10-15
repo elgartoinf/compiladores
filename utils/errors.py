@@ -27,7 +27,7 @@ Use clear_errors() para borrar el número total de errores.
 '''
 
 import sys
-from colors import bcolors
+from .colors import bcolors
 
 _num_errors = 0
 
