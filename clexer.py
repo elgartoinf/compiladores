@@ -115,8 +115,7 @@ class Lexer(SLYLexer):
     keywords = {
         #type_spec
         'float',
-        'int',
-        'void',
+        'integer',
         'string',
         'char',
         'true',
@@ -150,11 +149,14 @@ class Lexer(SLYLexer):
         'comma',
         'lparen',
         'rparen',
-        
+        'lbracket',
+        'rbracket',
         'return',
-
-        'id',
-
+        'muleq',
+        'diveq',
+        'modeq',
+        'or',
+        'and',
     }
 
     # ----------------------------------------------------------------------
@@ -199,11 +201,6 @@ class Lexer(SLYLexer):
     # ----------------------------------------------------------------------
     # Patrones ignorados.  Complete las expresiones regulares a continuación 
     # para ignorar los comentarios
-    #
-    FLOAT = r"\d*\.\d+"
-    INT = r"0[xX][0-9a-fA-F]+|\d+"
-    STRING = r"(\".*?(?<!\\)(\\\\)*\"|'.*?(?<!\\)(\\\\)*')"
-    ID = r"(--[a-zA-Z_]([a-zA-Z0-9_]|!)*--|[a-zA-Z_]([a-zA-Z0-9_]|!)*)"
     PLUS    = r'\+'
     MINUS   = r'-'
     TIMES   = r'\*'
@@ -221,6 +218,13 @@ class Lexer(SLYLexer):
     LESS = r"<"
     EQ_ADD = r"\+="
     EQ_SUB = r"-="
+    MULEQ    = r'\*='
+    DIVEQ    = r'\/='
+    MODEQ    = r'\%='
+    OR       = r'\|\|'
+    AND      = r'\&\&'
+    LBRACKET = r'\{'
+    RBRACKET = r'\}'
     ID["true"] = TRUE
     ID["false"] = FALSE
     ID["while"] = WHILE
@@ -229,6 +233,20 @@ class Lexer(SLYLexer):
     ID["null"] = NULL
     ID["return"] = RETURN
 
+
+    #/*  */
+    @_(r'/\*(.|\n)*\*/')
+    def COMMENT(self, t):
+        self.lineno += t.value.count('\n')
+
+    # //
+    @_(r'//.*?')
+    def CPPCOMMENT(self, t):
+        self.lineno += 1
+
+    @_(r'/\*[^/\*]*')
+    def COMMENT_UNTERM(self, t):
+        error(self.lineno, "Comentario sin terminar")
         
     # ----------------------------------------------------------------------
     #                           *** DEBE COMPLETAR ***
@@ -248,6 +266,10 @@ class Lexer(SLYLexer):
     #
     # Tokens para literales, INTEGER, FLOAT, STRING.
     #
+    @_(r'\".*\"(,var|,\".*\")*|\'.*\'(,var|,\'.*\')*')
+    def STRING(self, t):
+        t.value = t.value[1:-1]
+        return t
     # Constante de punto flotante. Debe reconocer los números de punto 
     # flotante en los siguientes formatos:
     #
@@ -263,7 +285,11 @@ class Lexer(SLYLexer):
     #   1e1
     #
     # El valor debe ser convertir en un float de Python cuando se lea
-
+    @_(r'[-+]?[0-9]*\.[0-9]+(?:[eE][-+]?[0-9]+)?|[-+]?[0-9][eE][0-9]+|[+-]?\d*[.]')
+    def FLOAT(self, t):
+        if(not("e" in t.value)):
+            t.value = float(t.value)
+        return t
 
     # Constante entera
     #s
@@ -274,6 +300,11 @@ class Lexer(SLYLexer):
     # Bonificación. Reconocer enteros en diferentes bases tales como 
     # 0x1a, 0o13 o 0b111011.
     
+    @_(r'0[xX][0-9a-fA-F]+|0[oO][0-9a-fA-F]+|[0-9a-fA-F]+|\d+')
+    def INTEGER(self, t):
+        if(not("b" in t.value or "o" in t.value or "x" in t.value)):
+            t.value = int(t.value)
+        return t
 
     # ----------------------------------------------------------------------
     #                           *** DEBE COMPLETAR ***
@@ -290,7 +321,27 @@ class Lexer(SLYLexer):
     # combinan como identificadores. Debe capturar estos y cambiar su tipo 
     # de token para que coincida con la palabra clave adecuada.
     
+    @_(r'[a-zA-Z][a-zA-Z]*\d*_*|[_][a-zA-Z]*\d*_*')
+    def ID(self, t):
+        if t.value == 'const':
+            t.type = 'CONST'
 
+        elif t.value == 'print':
+            t.type = 'PRINT'
+
+        elif t.value == 'func':
+            t.type = 'FUNC'
+
+        elif t.value=='return':
+            t.type='RETURN'
+
+        elif t.value=='while':
+            t.type='WHILE'
+
+        elif t.value=='else':
+            t.type='ELSE'
+        
+        return t
 
     # ----------------------------------------------------------------------
     # Manejo de errores de caracteres incorrectos
