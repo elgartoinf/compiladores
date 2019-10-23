@@ -100,12 +100,12 @@ import sly
 # Las pruebas unitarias y otras características del compilador se basarán 
 # en esta función. Consulte el archivo errors.py para obtener más 
 # documentación sobre el mecanismo de manejo de errores.
-from errors import error
+from utils.errors import error
 
 # ------------------------------------------------- ---------------------
 # Importar la clase lexer. Su lista de tokens es necesaria para validar y 
 # construir el objeto analizador.
-from clex import Lexer
+from clexer import Lexer
 
 # ----------------------------------------------------------------------
 # Obtener los nodos AST.
@@ -118,14 +118,17 @@ class Parser(sly.Parser):
 	tokens = Lexer.tokens
 	
 	precedence = (
-		('left', '+', '-'),
-		('left', '*', '/', '%'),
-		('right', '!', UMINUS),
+		# ('left', '+', '-'),
+		# ('left', '*', '/', '%'),
+		# ('right', '!'),
 	)
+
+	def __init__(self):
+		self.env = { }
 
 	@_("decl_list")
 	def program(self, p):
-		pass
+		return self.env
 
 	@_("decl_list decl")
 	def decl_list(self, p):
@@ -157,13 +160,9 @@ class Parser(sly.Parser):
 
 	@_("type_spec IDENT '(' params ')' compound_stmt")
 	def fun_decl(self, p):
-		pass
+		return FuncDeclStmt(p.IDENT,p.IDENT,p.)
 
 	@_("param_list")
-	def params(self, p):
-		pass
-
-	@_("VOID")
 	def params(self, p):
 		pass
 	
@@ -187,13 +186,13 @@ class Parser(sly.Parser):
 	def compound_stmt(self, p):
 		pass
 	
-	@_("local_decls local_decl")
-	def local_decls(self, p):
-		pass
+	# @_("local_decls local_decl")
+	# def local_decls(self, p):
+	# 	pass
 
-	@_("empty")
-	def local_decls(self, p):
-		pass
+	# @_("empty")
+	# def local_decls(self, p):
+	# 	pass
 
 	@_("type_spec IDENT ';'")
 	def local_decl(self, p):
@@ -219,7 +218,7 @@ class Parser(sly.Parser):
 	def expr_stmt(self, p):
 		pass
 
-	@("';'")
+	@_("';'")
 	def expr_stmt(self, p):
 		pass
 
@@ -233,6 +232,7 @@ class Parser(sly.Parser):
 
 	@_("IF '(' expr ')' stmt ELSE stmt")
 	def if_stmt(self, p):
+		pass
 
 	@_("RETURN ';'")
 	def return_stmt(self, p):
@@ -242,9 +242,9 @@ class Parser(sly.Parser):
 	def return_stmt(self, p):
 		pass
 			
-	@_("BREAK ';'")
-	def break_stamt(self, p):
-		pass
+	# @_("BREAK ';'")
+	# def break_stamt(self, p):
+	# 	pass
 
 	@_("IDENT '=' expr")
 	def expr(self, p):
@@ -254,19 +254,32 @@ class Parser(sly.Parser):
 	def expr(self, p):
 		return ArrayAssignmentExpr(p.IDENT, p.expr0, p.expr1, lineno=p.lineno)
 
+	
 	@_("expr OR expr",
 	   "expr AND expr",
-	   "expr EQ expr", "expr NE expr",
-	   "expr LE expr", "expr '<' expr", "expr GE expr", "expr '>' expr",
-	   "expr '+' expr", "expr '-' expr",
-	   "expr '*' expr", "expr '/' expr", "expr '%' expr",
+	   "expr EQ expr", 
+	   "expr NE expr",
+	   "expr LE expr", 
+	   "expr '<' expr", 
+	   "expr GE expr", 
+	   "expr '>' expr",
+	   "expr '+' expr", 
+	   "expr '-' expr",
+	   "expr '*' expr", 
+	   "expr '/' expr", 
+	   "expr '%' expr",
+	   "'!' expr",
+	   "'-' expr",
+	   "'+' expr",
+	   "'(' expr ')' ",
+	   " IDENT  ",
+	   " IDENT'[' expr ']'  ",
+	   "IDENT'(' args ')'",
+	   "IDENT.size",
+	)
 	def expr(self, p):
 		return Binop(p[1], p.expr0, p.expr1, lineno=p.lineno)
-
-
-		| ! expr | - expr | + expr
-			| ( expr )
-			| IDENT | IDENT[ expr ] | IDENT( args ) | IDENT . size
+		
 		
 	@_("BOOL_LIT")
 	def expr(self, p):
@@ -284,15 +297,16 @@ class Parser(sly.Parser):
 	def expr(self, p):
 		return NewArrayExpr(p.type_spec, p.expr, lineno=p.lineno)
 
+	@_(
+		"arg_list",
+		"expr",
+	)
 	def arg_list(self, p):
 		pass
-		: arg_list , expr 
-			| expr 
-	
+		
+	@_("arg_list")
 	def args(self, p):
 		pass
-		: arg_list 
-			| empty
 
 	# ----------------------------------------------------------------------
 	# NO MODIFIQUE
