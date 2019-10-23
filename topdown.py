@@ -105,7 +105,6 @@ class WriteLocation(Statement):
 	location : Location
 	value    : Expression
 
-
 # -------------------------------------------
 # Recursive Descent Parser.
 #
